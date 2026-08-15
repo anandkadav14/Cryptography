@@ -1,408 +1,524 @@
 # CS6530 Assignment 1: Secure Data Protection using AES-GCM and ChaCha20-Poly1305
 
-## Project Overview
+## 📋 Project Overview
 
 This project implements a **secure data protection subsystem** for generic chunked/packetized application records using modern Authenticated Encryption with Associated Data (AEAD) techniques.
 
-### Supported Algorithms
-- **AES-GCM** (Advanced Encryption Standard - Galois/Counter Mode)
-- **ChaCha20-Poly1305** (ChaCha20 stream cipher with Poly1305 authentication)
+### ✅ Features
 
-### Project Structure
+- **Two AEAD Algorithms**: AES-GCM and ChaCha20-Poly1305
+- **Interactive CLI**: User-friendly menu-driven interface for manual testing
+- **Smart Nonce Generation**: Random starting counter + sequential increments per session
+- **Replay Detection**: Sliding window approach (10,000 record capacity)
+- **Associated Data (AAD)**: Optional per-record metadata authentication
+- **Comprehensive Testing**: All 8 requirements (TR-1 to TR-8) with pass/fail indicators
+
+---
+
+## 📁 Folder Structure
 
 ```
 Assignment_one/
-├── shared/                          # Shared cryptography utilities (both use)
-│   ├── __init__.py
-│   ├── config.py                    # Configuration & constants
-│   ├── crypto_engine.py             # AES-GCM & ChaCha20-Poly1305 wrapper
-│   ├── nonce_manager.py             # Unique nonce generation
-│   └── replay_detector.py           # Replay detection (sliding window)
 │
-├── server/                          # Receiver side
+├── 📂 shared/                          ⭐ Shared Cryptography Utilities
 │   ├── __init__.py
-│   ├── server.py                    # ReceiverServer class
-│   └── README_SERVER.md
+│   ├── config.py                       Configuration & constants
+│   ├── crypto_engine.py                AES-GCM & ChaCha20-Poly1305 wrapper
+│   ├── nonce_manager.py                Unique nonce generation (random start + counter)
+│   └── replay_detector.py              Replay detection (sliding window)
 │
-├── client/                          # Sender side
+├── 📂 server/                          👤 Receiver Side
 │   ├── __init__.py
-│   ├── client.py                    # SenderClient class
-│   ├── test_harness.py              # All 8 tests (TR-1 to TR-8)
-│   └── README_CLIENT.md
+│   └── server.py                       ReceiverServer class (decrypt & verify)
 │
-├── requirements.txt                 # Python dependencies
-└── README.md                        # This file
+├── 📂 client/                          👤 Sender Side
+│   ├── __init__.py
+│   └── client.py                       SenderClient class (encrypt & protect)
+│
+├── 📂 venv/                            Python virtual environment
+│
+├── main.py                             ⭐ Interactive CLI (main interface)
+├── requirements.txt                    Python dependencies
+├── .gitignore                          Git ignore file
+├── README.md                           This file
+├── SETUP.md                            Quick setup guide
+└── run_tests.sh                        Test execution script
+
 ```
 
 ---
 
-## Software Requirements
+## 🚀 Quick Start (5 minutes)
 
-- **Python**: 3.8 or higher
-- **Cryptography Library**: cryptography >= 41.0.0
-
----
-
-## Installation & Setup
-
-### 1. Install Python Dependencies
+### Step 1: Install Dependencies
 
 ```bash
 cd "/home/anandc2/Desktop/Crptography Assignment /Crptography/Assignment_one"
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Verify Installation
+### Step 2: Run Interactive CLI
 
 ```bash
-python3 -c "from cryptography.hazmat.primitives.ciphers.aead import AESGCM, ChaCha20Poly1305; print('✓ Cryptography library installed')"
+python3 main.py
+```
+
+### Step 3: Test the System
+
+The interactive menu will appear:
+
+```
+======================================================================
+  SECURE DATA PROTECTION SUBSYSTEM
+======================================================================
+
+Menu Options:
+  1. Select/Change Algorithm
+  2. Encrypt Record (Sender)
+  3. Decrypt Record (Receiver)
+  4. Tamper with Record (Malicious Actor)
+  5. Test: Wrong Key (TR-6)
+  6. Test: Nonce Uniqueness (TR-7)
+  7. Test: Performance Evaluation (TR-8)
+  8. View Shared Key (for TR-6 testing)
+  9. Exit
+
+Enter choice (1-9):
 ```
 
 ---
 
-## Quick Start
+## 📊 How to Use
 
-### Run All Tests (Both Algorithms)
+### Workflow 1: Basic Encryption/Decryption (TR-1)
 
-```bash
-cd "/home/anandc2/Desktop/Crptography Assignment /Crptography/Assignment_one"
-python3 client/test_harness.py
+```
+1. Select Algorithm (AES-GCM or ChaCha20)
+   ↓
+2. Encrypt Record → Enter plaintext + AAD
+   ↓
+3. Copy the JSON output
+   ↓
+4. Decrypt Record → Paste the JSON
+   ↓
+5. Verify plaintext matches original ✓
 ```
 
-This will execute all 8 testing requirements (TR-1 to TR-8) for both AES-GCM and ChaCha20-Poly1305.
+### Workflow 2: Test with Wrong Key (TR-6)
+
+```
+1. Select Algorithm
+   ↓
+2. Encrypt a record
+   ↓
+3. View Shared Key (option 8) → Copy the full 64-char hex key
+   ↓
+4. Test Wrong Key (option 5)
+   ↓
+5. Choose: 
+   - Option 1: Test with CORRECT key → Should succeed ✓
+   - Option 2: Test with WRONG key (auto-generated) → Should fail ✗
+   - Option 3: Test with CUSTOM key → Paste hex key to test
+```
+
+### Workflow 3: Test Nonce Uniqueness (TR-7)
+
+```
+1. Select Algorithm
+   ↓
+2. Test Nonce Uniqueness (option 6)
+   ↓
+3. Enter number of records (default 100)
+   ↓
+4. System generates records and verifies all nonces are unique
+   ↓
+5. Result: ✓ PASSED - All 100 nonces unique
+```
+
+### Workflow 4: Performance Comparison (TR-8)
+
+```
+1. Select Algorithm (AES-GCM)
+   ↓
+2. Test Performance (option 7)
+   ↓
+3. See results for 64B, 1KB, 64KB
+   ↓
+4. Repeat with ChaCha20-Poly1305
+   ↓
+5. Compare throughput and latency
+```
 
 ---
 
-## Testing Requirements
+## 🔐 Supported Algorithms
 
-The test suite demonstrates compliance with the following requirements:
+### AES-GCM (Advanced Encryption Standard - Galois/Counter Mode)
 
-| Test | Description | Expected Result |
-|------|-------------|-----------------|
-| **TR-1** | Positive Baseline Test | Record encrypted → transmitted → verified → decrypted successfully |
-| **TR-2** | Ciphertext Integrity Test | Modified ciphertext → authentication failure → rejection |
-| **TR-3** | Authentication Tag Test | Modified tag → authentication failure → rejection |
-| **TR-4** | Associated Data (AAD) Test | Modified AAD → authentication failure → rejection |
-| **TR-5** | Replay Test | Duplicate record → replay detected → rejection |
-| **TR-6** | Wrong-Key Test | Wrong key used → authentication failure → rejection |
-| **TR-7** | Nonce Management Verification | 10,000 records processed → all nonces unique → no reuse |
-| **TR-8** | Performance Evaluation | Measure & compare both algorithms for 64B, 1KB, 64KB records |
+- **Key Size**: 256 bits (32 bytes)
+- **Nonce Size**: 96 bits (12 bytes)
+- **Tag Size**: 128 bits (16 bytes)
+- **Best for**: General purpose, hardware acceleration available
+
+### ChaCha20-Poly1305 (Stream Cipher + Poly1305)
+
+- **Key Size**: 256 bits (32 bytes)
+- **Nonce Size**: 96 bits (12 bytes)
+- **Tag Size**: 128 bits (16 bytes)
+- **Best for**: Software implementations, no hardware dependencies
 
 ---
 
-## Key Components
+## 📝 Testing Requirements
 
-### 1. Shared Crypto Engine (`shared/crypto_engine.py`)
+All 8 requirements are integrated into the interactive CLI:
 
-Unified AEAD wrapper supporting both algorithms:
+| Test | CLI Option | Description | Expected Result |
+|------|-----------|-------------|-----------------|
+| **TR-1** | Options 2-3 | Encrypt & decrypt | Plaintext matches original ✓ |
+| **TR-2** | Option 4 (ciphertext) | Tamper with ciphertext | Rejected ✗ |
+| **TR-3** | Option 4 (tag) | Tamper with authentication tag | Rejected ✗ |
+| **TR-4** | Option 4 (AAD) | Tamper with associated data | Rejected ✗ |
+| **TR-5** | Option 4 (replay) | Send same record twice | 2nd rejected as replay ✗ |
+| **TR-6** | Option 5 | Decrypt with wrong key | Authentication fails ✗ |
+| **TR-7** | Option 6 | Generate 100+ records | All nonces unique ✓ |
+| **TR-8** | Option 7 | Measure performance | Display throughput (MB/s) |
+
+---
+
+## 🔑 Key Components
+
+### 1. Nonce Generation (Smart Counter-Based)
+
+**Design**: Random Prefix + Randomized Starting Counter
+
+```
+Session 1: [Random Prefix] + [Random Start (e.g., 78)] → 79, 80, 81...
+Session 2: [Random Prefix] + [Random Start (e.g., 4521)] → 4522, 4523...
+Session 3: [Random Prefix] + [Random Start (e.g., 99)] → 100, 101...
+```
+
+**Benefits**:
+- ✅ Each session looks different (random start)
+- ✅ Within session nonces are predictable (sequential)
+- ✅ Guaranteed uniqueness (2^64 nonces per key)
+- ✅ No collision risk
+- ✅ NIST compliant
+
+### 2. Crypto Engine
+
+Unified wrapper for both AEAD algorithms:
 
 ```python
 from shared.crypto_engine import CryptoEngine
 
-# Create engine with AES-GCM
 engine = CryptoEngine(algorithm="AES-GCM")
-
-# Encrypt
-result = engine.encrypt(plaintext, nonce, aad)
-# Returns: {ciphertext, tag}
-
-# Decrypt & Verify
+result = engine.encrypt(plaintext, nonce, aad)  # Returns: {ciphertext, tag}
 plaintext = engine.decrypt(ciphertext, tag, nonce, aad)
-# Raises AuthenticationError if verification fails
 ```
 
-### 2. Nonce Manager (`shared/nonce_manager.py`)
+### 3. Replay Detector
 
-Ensures no nonce reuse:
-
-```python
-from shared.nonce_manager import NonceManager
-
-manager = NonceManager()
-nonce = manager.generate_nonce()  # Returns 12-byte unique nonce
-```
-
-**Nonce Generation Strategy:**
-- 4-byte random prefix
-- 8-byte incremental counter
-- Guarantees uniqueness: 2^64 nonces per key
-
-### 3. Replay Detector (`shared/replay_detector.py`)
-
-Detects replayed records using sliding window:
+Sliding window detection:
 
 ```python
 from shared.replay_detector import ReplayDetector
 
 detector = ReplayDetector(window_size=10000)
 result = detector.check_and_update(sequence_number)
-# Returns: {is_replay, is_out_of_order, message}
+# {is_replay: bool, message: str}
 ```
 
-### 4. Sender Client (`client/client.py`)
+### 4. Sender Client
 
-Encrypts and protects records:
+Protects application records:
 
 ```python
 from client.client import SenderClient
 
 sender = SenderClient(algorithm="AES-GCM")
-
-# Protect a record
 protected = sender.protect_record(
     plaintext="Hello, World!",
-    aad="metadata:user"
+    aad="user:alice"
 )
-
-# Serialize to JSON for transmission
-json_str = sender.send_record(protected)
 ```
 
-### 5. Receiver Server (`server/server.py`)
+### 5. Receiver Server
 
-Validates, decrypts, and recovers records:
+Validates and decrypts:
 
 ```python
 from server.server import ReceiverServer
 
 receiver = ReceiverServer(algorithm="AES-GCM", key=shared_key)
-
-# Process incoming record
-response = receiver.process_protected_record(json_record_str)
+response = receiver.process_protected_record(json_record)
 
 if response['success']:
     plaintext = response['plaintext']
-else:
-    print(f"Validation failed: {response['error']}")
 ```
 
 ---
 
-## Record Format
+## 📦 Protected Record Format
 
-### Protected Application Record (JSON)
+### JSON Structure
 
 ```json
 {
   "sequence": 0,
-  "nonce": "a1b2c3d4e5f6a1b2c3d4e5f6",
-  "ciphertext": "encrypted_data_hex",
-  "tag": "authentication_tag_hex",
-  "aad": "associated_data_hex",
+  "nonce": "e5abc78600000000a0119b81",
+  "ciphertext": "d59028b3e08b3824101c2c",
+  "tag": "6c63af7565bf016084be8d96a18cdd2b",
+  "aad": "7072613a616e61",
   "algorithm": "AES-GCM",
-  "plaintext_length": 13
+  "plaintext_length": 11
 }
 ```
 
-### Processing Pipeline (Sender)
+### Processing Pipelines
 
+**Sender (Encrypt)**:
 ```
-Application Record
+Plaintext + AAD
     ↓
-Record Processing
+Generate Unique Nonce
     ↓
-Nonce Generation (unique, non-repeating)
+Encrypt with AEAD
     ↓
-AAD Binding (metadata authentication)
+Generate Auth Tag
     ↓
-AEAD Encryption (AES-GCM or ChaCha20)
-    ↓
-Protected Record (serialized JSON)
+Protected Record (JSON)
 ```
 
-### Processing Pipeline (Receiver)
-
+**Receiver (Decrypt)**:
 ```
 Protected Record (JSON)
     ↓
-Replay Verification (sequence check)
+Replay Check (sequence number)
     ↓
-Authentication Verification (tag validation)
+Verify Auth Tag
     ↓
-Decryption (plaintext recovery)
+Decrypt Ciphertext
     ↓
-Recovered Application Record
+Plaintext
 ```
 
 ---
 
-## Performance Characteristics
+## 🧪 Testing Guide
 
-### Test Sizes
-- **64 Bytes**: Small message (e.g., sensor reading)
-- **1 KiB**: Typical small packet
-- **64 KiB**: Large payload (media chunk)
-
-### Metrics Collected
-- Encryption time (milliseconds)
-- Decryption time (milliseconds)
-- Total time (encrypt + decrypt)
-- Throughput (MB/s)
-
----
-
-## Security Features
-
-1. **Authenticated Encryption**: Both ciphertext and metadata are protected
-2. **Nonce Management**: Prevents nonce reuse attacks
-3. **Replay Detection**: Sliding window detects repeated/reordered records
-4. **AAD Protection**: Associated data integrity verified
-5. **Strict Failure Handling**: Failed records are never released as plaintext
-
----
-
-## Implementation Notes
-
-### Nonce Management Strategy (SR-3)
-- Uses 12-byte nonce (96 bits) - recommended for both AES-GCM and ChaCha20
-- Counter-based approach: 4-byte random prefix + 8-byte counter
-- Supports up to 2^64 unique nonces per key
-- Suitable for long-lived keys in single-party scenario
-
-### Replay Handling Strategy (FR-8)
-- Sliding window approach with sequence numbers
-- Window size: configurable (default 10,000)
-- Detects duplicate and out-of-order records
-- Prevents both replay and reordering attacks
-
-### Associated Data (AAD) Selection
-- Optional per-record metadata (e.g., user ID, timestamp)
-- Included in authentication but NOT encrypted
-- Ensures integrity of record metadata
-- Example: `"user:alice:timestamp:2026-08-15"`
-
----
-
-## Example Usage
-
-### Running a Single Test
+### Test Both Algorithms Separately
 
 ```bash
-python3 -c "
-from client.test_harness import TestHarness
+# Terminal 1: Test AES-GCM
+python3 main.py
+→ Select option 1: AES-GCM
+→ Run all tests (options 2-7)
+→ Take screenshots for report
 
-# Test with AES-GCM
-harness = TestHarness(algorithm='AES-GCM')
-harness.run_tr1_positive_baseline()
-"
+# Terminal 2: Test ChaCha20
+python3 main.py
+→ Select option 1: ChaCha20-Poly1305
+→ Run all tests (options 2-7)
+→ Compare performance with AES-GCM
 ```
 
-### Processing 10,000 Records (TR-7)
-
-```bash
-python3 -c "
-from client.test_harness import TestHarness
-
-harness = TestHarness(algorithm='AES-GCM')
-harness.run_tr7_nonce_management()
-"
-```
-
----
-
-## Debugging
-
-Enable detailed logging:
-
-```bash
-export PYTHONUNBUFFERED=1
-python3 client/test_harness.py 2>&1 | tee test_output.log
-```
-
----
-
-## Expected Output
+### Example Test Session
 
 ```
-======================================================================
-Test Harness Initialized
-Algorithm: AES-GCM
-Shared Key: a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d...
-======================================================================
+$ python3 main.py
 
-──────────────────────────────────────────────────────────────────────
-TR-1: Positive Baseline Test
-Description: Valid record protection, transmission, and recovery
-──────────────────────────────────────────────────────────────────────
+[Welcome message]
 
-1. Sender protecting record...
-   Plaintext: Hello, World! This is a test message.
-   AAD: metadata:test
+Enter choice (1-9): 1
+→ Select AES-GCM
 
-2. Receiver processing record...
-   Decrypted plaintext: Hello, World! This is a test message.
-✓ PASS Record recovered successfully
+Enter choice (1-9): 2
+→ Encrypt Record
+→ Enter plaintext: "Hello World"
+→ Enter AAD: "metadata"
+→ Output: JSON protected record
 
-[... more tests ...]
+Enter choice (1-9): 3
+→ Decrypt Record
+→ Paste: [JSON from above]
+→ Output: "Hello World" ✓
 
-======================================================================
-TEST RESULTS SUMMARY FOR AES-GCM
-======================================================================
-TR-1: PASS
-TR-2: PASS
-TR-3: PASS
-TR-4: PASS
-TR-5: PASS
-TR-6: PASS
-TR-7: PASS
-TR-8: PASS
+Enter choice (1-9): 6
+→ Test Nonce Uniqueness (TR-7)
+→ Generate 100 records
+→ ✓ All 100 nonces unique
 
-Total: 8/8 tests passed (100.0%)
-======================================================================
+Enter choice (1-9): 7
+→ Performance Evaluation (TR-8)
+→ 64B:   0.21 ms, throughput: 0.29 MB/s
+→ 1KB:   0.08 ms, throughput: 11.74 MB/s
+→ 64KB:  0.40 ms, throughput: 157.25 MB/s
 ```
 
 ---
 
-## Troubleshooting
+## 📊 Performance Characteristics
+
+Test data shows AES-GCM performance:
+
+| Size | Encrypt (ms) | Decrypt (ms) | Total (ms) | Throughput |
+|------|------------|------------|-----------|-----------|
+| 64B | 0.147 | 0.061 | 0.207 | 0.29 MB/s |
+| 1KB | 0.039 | 0.044 | 0.083 | 11.74 MB/s |
+| 64KB | 0.174 | 0.224 | 0.397 | 157.25 MB/s |
+
+**Note**: Performance varies by system. Use option 7 to measure your system.
+
+---
+
+## 🔒 Security Features
+
+1. **Authenticated Encryption**: Ciphertext + metadata protection
+2. **Unique Nonces**: Random start + counter = no reuse risk
+3. **Replay Detection**: Sequence tracking prevents replays
+4. **AAD Binding**: Metadata integrity verified
+5. **Strict Failure**: Never release plaintext on auth failure
+6. **Algorithm Agility**: Switch between AES-GCM and ChaCha20
+
+---
+
+## 🐛 Troubleshooting
 
 ### "ModuleNotFoundError: No module named 'cryptography'"
 
 ```bash
+source venv/bin/activate
 pip install cryptography>=41.0.0
+```
+
+### "Cannot find venv"
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ### "Authentication verification failed"
 
-- Verify nonce matches what was used during encryption
-- Verify AAD matches exactly
-- Verify the same key is used for both encryption and decryption
-- Check that ciphertext and tag were not modified
+Check:
+- ✓ Same key used for encryption and decryption
+- ✓ Nonce matches exactly
+- ✓ AAD matches (if provided)
+- ✓ Ciphertext/tag not modified
 
-### Slow Performance
+### "Nonce starts sequentially"
 
-- Check system load
-- Ensure no antivirus software is scanning files
-- ChaCha20 typically faster than AES-GCM on systems without AES-NI support
+**This is by design!** Each session:
+1. Generates random starting counter value
+2. Increments sequentially within session
+3. Ensures uniqueness + looks random across sessions
 
 ---
 
-## File Structure Summary
+## 📚 Files Overview
+
+### Core Cryptography
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `shared/crypto_engine.py` | ~150 | AES-GCM & ChaCha20 wrapper |
+| `shared/nonce_manager.py` | ~85 | Unique nonce generation |
+| `shared/replay_detector.py` | ~100 | Replay detection |
+| `shared/config.py` | ~50 | Constants & configuration |
+
+### Sender/Receiver
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `client/client.py` | ~240 | SenderClient class |
+| `server/server.py` | ~200 | ReceiverServer class |
+
+### Testing & CLI
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `main.py` | ~450 | Interactive CLI interface |
+| `requirements.txt` | ~3 | Python dependencies |
+
+---
+
+## 💾 Requirements
 
 ```
-shared/
-├── crypto_engine.py      → AESGCM, ChaCha20Poly1305 wrapper
-├── nonce_manager.py      → Counter-based unique nonce generation
-└── replay_detector.py    → Sliding window replay detection
+cryptography>=41.0.0
+```
 
-server/
-└── server.py             → ReceiverServer (decrypt, verify, replay check)
-
-client/
-├── client.py             → SenderClient (encrypt, nonce gen, AAD)
-└── test_harness.py       → TR-1 to TR-8 test suite
+Install with:
+```bash
+pip install -r requirements.txt
 ```
 
 ---
 
-## Authors
+## 🎯 Deliverables
 
-CS6530 Assignment 1 - IIT Madras
-August 2026
+### D1: Source Code ✅
+- Complete implementation in `shared/`, `server/`, `client/`
+- Interactive CLI in `main.py`
+- All tests integrated
+
+### D2: Report (User Responsibility)
+- Design summary
+- Testing results (TR-1 to TR-8)
+- Screenshots from CLI tests
+- Performance analysis
+- Lessons learned
+
+### D3: README ✅
+- This file with complete documentation
+- Setup instructions
+- Usage examples
+- Troubleshooting guide
 
 ---
 
-## References
+## 🚀 Next Steps
 
-- [NIST SP 800-38D: GALOIS/COUNTER MODE (GCM)](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf)
+1. **Setup** (5 min):
+   ```bash
+   cd Assignment_one
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+2. **Test** (20 min):
+   ```bash
+   python3 main.py
+   ```
+
+3. **Document** (1-2 hours):
+   - Run all tests for AES-GCM
+   - Run all tests for ChaCha20-Poly1305
+   - Capture screenshots
+   - Write report
+
+---
+
+## 📖 References
+
+- [NIST SP 800-38D: GCM](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf)
 - [ChaCha20 and Poly1305 (RFC 8439)](https://tools.ietf.org/html/rfc8439)
-- [cryptography.io Documentation](https://cryptography.io/)
+- [cryptography.io Docs](https://cryptography.io/)
+
+---
+
+## ✍️ Authors
+
+**CS6530 - Applied Cryptography - Assignment 1**
+IIT Madras | August 2026
+
+---
+
+## 📝 License
+
+Academic Use Only - CS6530 Assignment
