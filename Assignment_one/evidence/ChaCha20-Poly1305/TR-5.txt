@@ -1,0 +1,8 @@
+TR-5 Replay Test
+
+Sequence: 0
+1st attempt success: True plaintext='replay-plaintext'
+2nd attempt success: False replay=True error=Replay detected: sequence 0 already seen
+
+
+OUTCOME: PASS

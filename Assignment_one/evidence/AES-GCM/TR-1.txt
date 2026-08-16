@@ -1,0 +1,19 @@
+TR-1 Positive Baseline Test
+
+Record 0: plaintext='Hello Alice' aad='msg-type:chat'
+  sequence=0 nonce=22556c44000000006f4a0573
+  success=True recovered='Hello Alice'
+  match=True
+
+Record 1: plaintext='Temp=27.5C' aad='msg-type:telemetry'
+  sequence=1 nonce=22556c44000000006f4a0574
+  success=True recovered='Temp=27.5C'
+  match=True
+
+Record 2: plaintext='payload-chunk-001' aad='chunk:1'
+  sequence=2 nonce=22556c44000000006f4a0575
+  success=True recovered='payload-chunk-001'
+  match=True
+
+
+OUTCOME: PASS

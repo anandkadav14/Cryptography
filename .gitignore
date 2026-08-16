@@ -39,6 +39,7 @@ venv.bak/
 # IDE
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
@@ -76,3 +77,6 @@ test_output*.log
 *.backup
 *~
 .#*
+
+*.html
+

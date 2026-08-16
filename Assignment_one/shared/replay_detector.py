@@ -24,9 +24,9 @@ class ReplayDetector:
         self.seen_sequences = set()
         self.max_sequence = -1
 
-    def check_and_update(self, sequence_number):
+    def check(self, sequence_number):
         """
-        Check if sequence number is a replay and update window.
+        Check if sequence number is a replay without updating state.
 
         Args:
             sequence_number: int sequence number from record
@@ -38,7 +38,6 @@ class ReplayDetector:
                 'message': str
             }
         """
-        # Check if already seen
         if sequence_number in self.seen_sequences:
             return {
                 'is_replay': True,
@@ -46,7 +45,6 @@ class ReplayDetector:
                 'message': f'Replay detected: sequence {sequence_number} already seen'
             }
 
-        # Check if out of order (sequence < max but not in window)
         if sequence_number < self.max_sequence:
             return {
                 'is_replay': True,
@@ -54,23 +52,35 @@ class ReplayDetector:
                 'message': f'Out-of-order/replayed: sequence {sequence_number} < max {self.max_sequence}'
             }
 
-        # Valid new sequence number
-        self.seen_sequences.add(sequence_number)
-
-        # Update max sequence
-        if sequence_number > self.max_sequence:
-            self.max_sequence = sequence_number
-
-        # Prune old sequences outside window
-        if len(self.seen_sequences) > self.window_size:
-            min_sequence = self.max_sequence - self.window_size
-            self.seen_sequences = {seq for seq in self.seen_sequences if seq > min_sequence}
-
         return {
             'is_replay': False,
             'is_out_of_order': False,
             'message': f'Sequence {sequence_number} accepted'
         }
+
+    def register(self, sequence_number):
+        """
+        Commit a sequence number after successful authentication.
+        """
+        self.seen_sequences.add(sequence_number)
+
+        if sequence_number > self.max_sequence:
+            self.max_sequence = sequence_number
+
+        if len(self.seen_sequences) > self.window_size:
+            min_sequence = self.max_sequence - self.window_size
+            self.seen_sequences = {seq for seq in self.seen_sequences if seq > min_sequence}
+
+    def check_and_update(self, sequence_number):
+        """
+        Check if sequence number is a replay and update window.
+        Prefer check() + register() after auth success in the receiver path.
+        """
+        result = self.check(sequence_number)
+        if not result['is_replay']:
+            self.register(sequence_number)
+            result['message'] = f'Sequence {sequence_number} accepted'
+        return result
 
     def is_replay(self, sequence_number):
         """
@@ -82,11 +92,7 @@ class ReplayDetector:
         Returns:
             bool: True if likely replay or out-of-order
         """
-        if sequence_number in self.seen_sequences:
-            return True
-        if sequence_number < self.max_sequence:
-            return True
-        return False
+        return self.check(sequence_number)['is_replay']
 
     def get_max_sequence(self):
         """Return the maximum sequence number seen."""

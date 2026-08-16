@@ -1,0 +1,9 @@
+TR-8 Performance Evaluation
+
+Size         Encrypt_ms   Decrypt_ms     Total_ms  Throughput_MBps
+------------------------------------------------------------------
+64B               0.018        0.028        0.047            1.307
+1KiB              0.034        0.020        0.053           18.322
+64KiB             0.188        0.235        0.422          147.929
+
+OUTCOME: PASS

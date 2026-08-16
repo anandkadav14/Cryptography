@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from client.client import SenderClient
 from server.server import ReceiverServer
-from shared.config import ALGORITHM_AES_GCM, ALGORITHM_CHACHA20
+from shared.config import ALGORITHM_AES_GCM, ALGORITHM_CHACHA20, NONCE_TEST_COUNT
 from shared.crypto_engine import AuthenticationError
 
 
@@ -331,7 +331,7 @@ class SecureDataProtectionCLI:
 
         self.print_header("TEST: NONCE UNIQUENESS (TR-7)")
 
-        count = int(input("How many records to test? (default 100): ") or "100")
+        count = int(input(f"How many records to test? (default {NONCE_TEST_COUNT}): ") or str(NONCE_TEST_COUNT))
 
         print(f"\nGenerating {count} records and checking for nonce uniqueness...\n")
 

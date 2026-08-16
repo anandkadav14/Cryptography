@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared.crypto_engine import CryptoEngine
 from shared.nonce_manager import NonceManager
+from shared.aad_utils import build_record_aad
 from shared.config import *
 
 
@@ -76,17 +77,16 @@ class SenderClient:
         nonce = self.nonce_manager.generate_nonce()
         self.logger.info(f"[Seq {self.sequence_number}] Generated nonce: {nonce.hex()}")
 
-        # Prepare AAD
+        # Prepare user AAD, then bind sequence into canonical AAD for AEAD
         if aad is None:
-            aad_bytes = b''
-            aad_hex = ''
+            user_aad_bytes = b''
+        elif isinstance(aad, str):
+            user_aad_bytes = aad.encode('utf-8')
         else:
-            if isinstance(aad, str):
-                aad_bytes = aad.encode('utf-8')
-                aad_hex = aad_bytes.hex()
-            else:
-                aad_bytes = aad
-                aad_hex = aad_bytes.hex()
+            user_aad_bytes = aad
+
+        aad_bytes = build_record_aad(self.sequence_number, user_aad_bytes)
+        aad_hex = aad_bytes.hex()
 
         # Encrypt
         self.logger.info(f"[Seq {self.sequence_number}] Encrypting with {self.algorithm}...")

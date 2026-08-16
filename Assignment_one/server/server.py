@@ -3,7 +3,6 @@ Receiver Server
 Listens for protected application records and validates/decrypts them.
 """
 
-import socket
 import json
 import sys
 import os
@@ -14,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared.crypto_engine import CryptoEngine, AuthenticationError
 from shared.replay_detector import ReplayDetector
+from shared.aad_utils import aad_matches_sequence
 from shared.config import *
 
 
@@ -104,9 +104,9 @@ class ReceiverServer:
             tag = bytes.fromhex(tag_hex)
             aad = bytes.fromhex(aad_hex) if aad_hex else b''
 
-            # ===== STEP 1: Replay Detection =====
+            # ===== STEP 1: Replay Detection (check only; commit after auth) =====
             self.logger.info(f"[Sequence {sequence}] Checking for replay...")
-            replay_result = self.replay_detector.check_and_update(sequence)
+            replay_result = self.replay_detector.check(sequence)
             if replay_result['is_replay']:
                 self.records_failed += 1
                 self.logger.warning(f"[Sequence {sequence}] REPLAY DETECTED: {replay_result['message']}")
@@ -116,10 +116,21 @@ class ReceiverServer:
                     sequence=sequence
                 )
 
+            # Sequence in JSON must match sequence bound inside AAD
+            if not aad_matches_sequence(aad, sequence):
+                self.records_failed += 1
+                self.logger.error(f"[Sequence {sequence}] ✗ AAD sequence binding mismatch")
+                return self._error_response(
+                    "Authentication verification failed: AAD sequence binding mismatch",
+                    sequence=sequence
+                )
+
             # ===== STEP 2: Authentication Verification =====
             self.logger.info(f"[Sequence {sequence}] Verifying authentication...")
             try:
                 plaintext = self.crypto_engine.decrypt(ciphertext, tag, nonce, aad)
+                # ===== Commit replay state only after successful auth =====
+                self.replay_detector.register(sequence)
                 self.records_verified += 1
                 self.logger.info(f"[Sequence {sequence}] ✓ Authentication verified")
 

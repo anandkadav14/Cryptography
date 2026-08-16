@@ -1,0 +1,11 @@
+TR-7 Nonce Management Verification
+
+Records requested: 10000
+Unique nonces: 10000
+Reuse detected at index: None
+Elapsed seconds: 0.0454
+Sample first nonce: 6de13cfb0000000010f056e4
+Sample last nonce: 6de13cfb0000000010f069bf
+
+
+OUTCOME: PASS

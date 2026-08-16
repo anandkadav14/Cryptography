@@ -1,0 +1,10 @@
+TR-2 Ciphertext Integrity Test
+
+Original ciphertext: 294b48b873063a6b9e4448d666f59634d3c362
+Tampered ciphertext: d64b48b873063a6b9e4448d666f59634d3c362
+Receiver success: False
+Error: Authentication verification failed: Authentication verification failed: 
+Plaintext released: None
+
+
+OUTCOME: PASS

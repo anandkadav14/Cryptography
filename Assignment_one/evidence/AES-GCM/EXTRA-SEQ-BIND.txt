@@ -1,0 +1,10 @@
+Extra: Sequence-AAD Binding Check
+
+Original sequence: 0
+Forged sequence: 999
+AAD (utf-8): seq=0|meta
+Rejected: True
+Error: Authentication verification failed: AAD sequence binding mismatch
+
+
+OUTCOME: PASS

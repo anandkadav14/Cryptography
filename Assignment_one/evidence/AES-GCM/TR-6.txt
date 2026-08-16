@@ -1,0 +1,7 @@
+TR-6 Wrong-Key Test
+
+Correct key decrypt success: True
+Wrong key decrypt failed (expected): True
+
+
+OUTCOME: PASS

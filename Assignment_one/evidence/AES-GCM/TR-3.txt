@@ -1,0 +1,9 @@
+TR-3 Authentication Tag Test
+
+Original tag: 412df95970e9b1828dc90a8749735531
+Tampered tag: be2df95970e9b1828dc90a8749735531
+Receiver success: False
+Error: Authentication verification failed: Authentication verification failed: 
+
+
+OUTCOME: PASS

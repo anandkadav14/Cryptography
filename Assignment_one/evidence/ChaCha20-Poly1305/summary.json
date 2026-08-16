@@ -1,0 +1,94 @@
+{
+  "algorithm": "ChaCha20-Poly1305",
+  "timestamp_utc": "2026-08-16T11:12:22.897318+00:00",
+  "shared_key_hex_prefix": "a3545c85f899c68630f9a3b661e1d2e0",
+  "results": [
+    {
+      "id": "TR-1",
+      "title": "Positive Baseline Test",
+      "outcome": "PASS",
+      "extra": {
+        "records": 3
+      }
+    },
+    {
+      "id": "TR-2",
+      "title": "Ciphertext Integrity Test",
+      "outcome": "PASS",
+      "extra": {}
+    },
+    {
+      "id": "TR-3",
+      "title": "Authentication Tag Test",
+      "outcome": "PASS",
+      "extra": {}
+    },
+    {
+      "id": "TR-4",
+      "title": "Associated Data (AAD) Test",
+      "outcome": "PASS",
+      "extra": {}
+    },
+    {
+      "id": "TR-5",
+      "title": "Replay Test",
+      "outcome": "PASS",
+      "extra": {}
+    },
+    {
+      "id": "TR-6",
+      "title": "Wrong-Key Test",
+      "outcome": "PASS",
+      "extra": {}
+    },
+    {
+      "id": "TR-7",
+      "title": "Nonce Management Verification",
+      "outcome": "PASS",
+      "extra": {
+        "count": 10000,
+        "unique": 10000,
+        "elapsed_sec": 0.0454
+      }
+    },
+    {
+      "id": "TR-8",
+      "title": "Performance Evaluation",
+      "outcome": "PASS",
+      "extra": {
+        "rows": [
+          {
+            "size_bytes": 64,
+            "label": "64B",
+            "encrypt_ms": 0.018,
+            "decrypt_ms": 0.028,
+            "total_ms": 0.047,
+            "throughput_MBps": 1.307
+          },
+          {
+            "size_bytes": 1024,
+            "label": "1KiB",
+            "encrypt_ms": 0.034,
+            "decrypt_ms": 0.02,
+            "total_ms": 0.053,
+            "throughput_MBps": 18.322
+          },
+          {
+            "size_bytes": 65536,
+            "label": "64KiB",
+            "encrypt_ms": 0.188,
+            "decrypt_ms": 0.235,
+            "total_ms": 0.422,
+            "throughput_MBps": 147.929
+          }
+        ]
+      }
+    },
+    {
+      "id": "EXTRA-SEQ-BIND",
+      "title": "Sequence-AAD Binding",
+      "outcome": "PASS",
+      "extra": {}
+    }
+  ]
+}

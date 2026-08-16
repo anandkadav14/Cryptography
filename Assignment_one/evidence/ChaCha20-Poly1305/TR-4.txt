@@ -1,0 +1,10 @@
+TR-4 Associated Data (AAD) Test
+
+Original AAD hex: 7365713d307c757365722d6d65746164617461
+Tampered AAD hex: 8c65713d307c757365722d6d65746164617461
+Original AAD utf-8: seq=0|user-metadata
+Receiver success: False
+Error: Authentication verification failed: AAD sequence binding mismatch
+
+
+OUTCOME: PASS
