@@ -57,7 +57,7 @@ class NonceManager:
 
     def get_nonce_count(self):
         """Return the number of nonces generated so far."""
-        return self.counter
+        return len(self.generated_nonces)
 
     def has_nonce_been_used(self, nonce):
         """
