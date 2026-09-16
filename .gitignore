@@ -80,3 +80,7 @@ test_output*.log
 
 *.html
 
+# Assignment 2 private identity keys
+Assignment_two/keys/alice/ed25519_private.pem
+Assignment_two/keys/bob/ed25519_private.pem
+

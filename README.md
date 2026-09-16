@@ -6,6 +6,10 @@ Coursework for **CS6530 Applied Cryptography** (IIT Madras).
 
 Secure data protection subsystem using **AES-GCM** and **ChaCha20-Poly1305**.
 
-All setup, libraries, run steps, and folder explanation are here:
-
 → [`Assignment_one/README.md`](Assignment_one/README.md)
+
+## Assignment 2
+
+Authenticated ephemeral key establishment (X25519, Ed25519, HKDF, AES-256-GCM).
+
+→ [`Assignment_two/README.md`](Assignment_two/README.md)
