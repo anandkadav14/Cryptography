@@ -96,6 +96,10 @@ python alice/alice.py <BOB_IP>
 
 Screenshot both terminals when you see SUCCESS for M1–M4 and APP messages.
 
+### TR-2 / TR-3 / TR-4 (two PCs; Mallory/replay on Bob PC)
+
+See `README.md`. After code updates, copy the new Python files to the Alice laptop. Keep the same `keys/`.
+
 ## 6. More detail
 
 See `README.md` in this folder for MITM, replay, forward secrecy, Wireshark bonus, and troubleshooting.

@@ -63,6 +63,17 @@ def _x25519_shared(our_private: X25519PrivateKey, peer_public_raw: bytes) -> byt
     return our_private.exchange(peer)
 
 
+def session_from_shared(
+    alice_sid: bytes,
+    bob_sid: bytes,
+    alice_eph_pk: bytes,
+    bob_eph_pk: bytes,
+    shared_secret: bytes,
+) -> SessionRuntime:
+    """Build directional channels from an X25519 shared secret and transcript inputs."""
+    return _build_session(alice_sid, bob_sid, alice_eph_pk, bob_eph_pk, shared_secret)
+
+
 def _build_session(
     alice_sid: bytes,
     bob_sid: bytes,

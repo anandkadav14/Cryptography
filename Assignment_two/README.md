@@ -62,7 +62,9 @@ This creates:
 
 - `keys/alice/` — Alice Ed25519 private + public
 - `keys/bob/` — Bob Ed25519 private + public
-- `keys/trusted/` — public keys both sides trust
+- `keys/trusted/` — public keys both sides trust (copies, not a new keypair)
+
+Diagram: [`docs/key_generation.md`](docs/key_generation.md)
 
 **Important for two PCs:** Alice and Bob must share the **same** trusted public keys.
 
@@ -79,87 +81,65 @@ You should see HKDF / TR-3 / TR-4-logic / TR-1-local all **PASS**.
 
 ---
 
-## Two-machine run (main assignment path)
+## Two-machine run (PDF path)
 
-Agree who is **Alice** and who is **Bob**. Find Bob’s IP (example Windows: `ipconfig`).
+This PC = **Bob** (example IP `10.21.232.147`). Other laptop = **Alice**. Same `keys/` on both. Mallory/replay is an extra **process on Bob’s PC**, not a third laptop.
 
-Default port: **5000**. Allow it in the firewall if needed.
+Copy updated `Assignment_two` code to the Alice laptop after pulls (keep the same `keys/`).
 
-### Step A — Connectivity only (no crypto)
+### Step A — Connectivity
 
-**Bob PC:**
+**Bob:** `python bob_test.py`  
+**Alice:** `python alice_test.py <BOB_IP>`
 
-```bash
-python bob_test.py
-```
+### TR-1 — Normal authenticated session
 
-**Alice PC:**
+**Bob:** `python bob/bob.py`  
+**Alice:** `python alice/alice.py <BOB_IP>`
 
-```bash
-python alice_test.py <BOB_IP>
-```
+### TR-2 — MITM (Alice → Bob-PC:5000 Mallory → Bob:5001)
 
-Expected: Alice sends `Hello Bob`, Bob replies `Hello Alice`.
-
-### Step B — Full authenticated session (TR-1)
-
-**Bob PC first:**
-
-```bash
-python bob/bob.py
-```
-
-**Alice PC:**
-
-```bash
-python alice/alice.py <BOB_IP>
-```
-
-Expected in both terminals:
-
-- M1 → M2 → M3 → M4 with **SUCCESS**
-- Three protected APP messages each way (counters 0, 1, 2)
-- Session complete
-
-Keep these terminal logs / screenshots for the report.
-
----
-
-## Other demos
-
-### Local MITM sketch (TR-2) — one PC, three terminals
-
-**Terminal 1 — Bob (port 5001), auth off:**
+Weak (auth off). Bob PC two terminals + Alice laptop:
 
 ```bash
 python bob/bob.py --port 5001 --no-auth
+python mallory/mallory.py --listen-port 5000 --bob-port 5001 --weak
+python alice/alice.py <BOB_IP> --no-auth
 ```
 
-**Terminal 2 — Mallory:**
+Bob must show `MALLORY-EDITED:` in decrypted APP plaintext.
+
+Auth on (same swap, session abort):
 
 ```bash
+python bob/bob.py --port 5001
 python mallory/mallory.py --listen-port 5000 --bob-port 5001
+python alice/alice.py <BOB_IP>
 ```
 
-**Terminal 3 — Alice → Mallory:**
+### TR-3 — Live replay
 
 ```bash
-python alice/alice.py 127.0.0.1 --no-auth
+python bob/bob.py --port 5001
+python tr3_replay.py --listen-port 5000 --bob-port 5001
+python alice/alice.py <BOB_IP>
 ```
 
-Then repeat **without** `--no-auth` (and with Mallory `--auth-attack` if you use that mode). With full authentication, the forged ephemeral keys should cause signature failure / abort.
+Bob: original APP SUCCESS, replay `REJECTED`.
 
-### Replay (TR-3)
+### TR-4 — Forward secrecy
 
-Covered in `run_tests.py` (same record rejected when counter is stale). Live demo: capture an APP record and resend it; Bob/Alice should reject.
+```bash
+python bob/bob.py --save-s1 s1_record.json
+python alice/alice.py <BOB_IP>
+python tr4_forward_secrecy.py s1_record.json
+```
 
-### Forward secrecy (TR-4)
+### Wireshark bonus
 
-Covered in `run_tests.py` logic. Live demo: save session material, discard ephemeral secrets, show long-term Ed25519 alone cannot rebuild traffic keys; old ephemeral secret could.
+Capture on Bob during TR-1. Identify M1–M4 and one APP record.
 
-### Wireshark bonus (optional)
-
-Capture one successful Alice–Bob session. Label M1–M4 and at least one AES-GCM application record. Note what is visible on the wire vs what is not.
+Local extra check: `python run_tests.py`
 
 ---
 
@@ -174,7 +154,10 @@ Assignment_two/
 ├── alice_test.py             plain Hello connectivity
 ├── bob_test.py
 ├── generate_keys.py
-├── run_tests.py              one-PC checks
+├── docs/key_generation.md    what the key files are
+├── tr3_replay.py             PDF TR-3 live capture/replay
+├── tr4_forward_secrecy.py    PDF TR-4 recorded S1 analysis
+├── run_tests.py              extra one-PC checks
 ├── config.py                 protocol IDs, roll numbers, port
 ├── crypto/                   shared handshake + AEAD
 ├── alice/alice.py

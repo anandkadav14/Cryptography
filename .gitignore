@@ -83,4 +83,5 @@ test_output*.log
 # Assignment 2 private identity keys
 Assignment_two/keys/alice/ed25519_private.pem
 Assignment_two/keys/bob/ed25519_private.pem
+Assignment_two/s1_record.json
 
