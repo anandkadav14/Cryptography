@@ -1,87 +1,165 @@
-# CS6530 Assignment 2
+# CS6530 Assignment 2 — Authenticated Ephemeral Key Establishment
 
-Authenticated Ephemeral Key Establishment (X25519, Ed25519, SHA-256, HKDF-SHA-256, AES-256-GCM).
+Course: Applied Cryptography (IIT Madras)
 
-Alice and Bob run on **two different computers**. This folder contains the full protocol code. Use instructor `transport.py` for TCP framing only.
+Alice and Bob run on **two different computers** on the same network. They complete an authenticated handshake (X25519 + Ed25519), derive session keys with HKDF-SHA-256, then exchange AES-256-GCM protected messages.
+
+This folder uses the instructor TCP helper (`transport.py`) for framing only. Crypto is implemented in our code.
+
+**Branch tip:** use the `assignment-two` branch if that is where this code lives on GitHub.
 
 ---
 
-## Setup
+## What you need
+
+| Item | Detail |
+|------|--------|
+| Python | 3.10 or newer |
+| OS | Windows, Linux, or macOS |
+| Network | Two PCs that can reach each other (same LAN / Wi-Fi) |
+| Library | `cryptography` (see `requirements.txt`) |
+
+---
+
+## After cloning the repository
+
+### 1. Get the code
+
+```bash
+git clone https://github.com/anandkadav14/Cryptography.git
+cd Cryptography
+git checkout assignment-two
+cd Assignment_two
+```
+
+### 2. Create a virtual environment and install packages
+
+**Windows (PowerShell):**
 
 ```powershell
-cd Assignment_two
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
+
+**Linux / macOS:**
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Create identity keys
+
+Private keys are **not** stored in git. Each machine (or one shared setup) must generate them:
+
+```bash
 python generate_keys.py
 ```
 
-Roll numbers in `config.py` (8 ASCII chars each):
-- Alice: `IC43333 `
-- Bob: `IC43332 `
+This creates:
 
----
+- `keys/alice/` — Alice Ed25519 private + public
+- `keys/bob/` — Bob Ed25519 private + public
+- `keys/trusted/` — public keys both sides trust
 
-## Step 0 — connectivity (no crypto)
+**Important for two PCs:** Alice and Bob must share the **same** trusted public keys.
 
-**Bob machine:**
-```powershell
-python bob_test.py
-```
+- Easy way: run `generate_keys.py` on **one** PC, then copy the whole `keys/` folder to the other PC (USB / shared drive / zip).
+- Or: generate once, copy only `keys/trusted/` plus each role’s private key to the correct machine.
 
-**Alice machine:**
-```powershell
-python alice_test.py <BOB_IP>
-```
+### 4. Optional — check on one PC first
 
----
-
-## Step 1 — normal authenticated session (TR-1)
-
-**Bob machine:**
-```powershell
-python bob/bob.py
-```
-
-**Alice machine:**
-```powershell
-python alice/alice.py <BOB_IP>
-```
-
-Expected: M1–M4 SUCCESS, three protected messages each direction, counters 0/1/2.
-
----
-
-## Step 2 — local automated checks (one PC)
-
-```powershell
+```bash
 python run_tests.py
 ```
 
-Runs HKDF check, replay rejection (TR-3 logic), forward-secrecy logic (TR-4), and a localhost TR-1 run.
+You should see HKDF / TR-3 / TR-4-logic / TR-1-local all **PASS**.
 
 ---
 
-## Step 3 — MITM demo (TR-2)
+## Two-machine run (main assignment path)
 
-Weakened mode (auth off) — Mallory substitutes ephemeral keys:
+Agree who is **Alice** and who is **Bob**. Find Bob’s IP (example Windows: `ipconfig`).
 
-Terminal 1 (Bob, port 5001):
-```powershell
+Default port: **5000**. Allow it in the firewall if needed.
+
+### Step A — Connectivity only (no crypto)
+
+**Bob PC:**
+
+```bash
+python bob_test.py
+```
+
+**Alice PC:**
+
+```bash
+python alice_test.py <BOB_IP>
+```
+
+Expected: Alice sends `Hello Bob`, Bob replies `Hello Alice`.
+
+### Step B — Full authenticated session (TR-1)
+
+**Bob PC first:**
+
+```bash
+python bob/bob.py
+```
+
+**Alice PC:**
+
+```bash
+python alice/alice.py <BOB_IP>
+```
+
+Expected in both terminals:
+
+- M1 → M2 → M3 → M4 with **SUCCESS**
+- Three protected APP messages each way (counters 0, 1, 2)
+- Session complete
+
+Keep these terminal logs / screenshots for the report.
+
+---
+
+## Other demos
+
+### Local MITM sketch (TR-2) — one PC, three terminals
+
+**Terminal 1 — Bob (port 5001), auth off:**
+
+```bash
 python bob/bob.py --port 5001 --no-auth
 ```
 
-Terminal 2 (Mallory, listens 5000, forwards to Bob 5001):
-```powershell
+**Terminal 2 — Mallory:**
+
+```bash
 python mallory/mallory.py --listen-port 5000 --bob-port 5001
 ```
 
-Terminal 3 (Alice connects to Mallory):
-```powershell
+**Terminal 3 — Alice → Mallory:**
+
+```bash
 python alice/alice.py 127.0.0.1 --no-auth
 ```
 
-Full auth mode: run same layout **without** `--no-auth`. Signature verification should fail and session aborts.
+Then repeat **without** `--no-auth` (and with Mallory `--auth-attack` if you use that mode). With full authentication, the forged ephemeral keys should cause signature failure / abort.
+
+### Replay (TR-3)
+
+Covered in `run_tests.py` (same record rejected when counter is stale). Live demo: capture an APP record and resend it; Bob/Alice should reject.
+
+### Forward secrecy (TR-4)
+
+Covered in `run_tests.py` logic. Live demo: save session material, discard ephemeral secrets, show long-term Ed25519 alone cannot rebuild traffic keys; old ephemeral secret could.
+
+### Wireshark bonus (optional)
+
+Capture one successful Alice–Bob session. Label M1–M4 and at least one AES-GCM application record. Note what is visible on the wire vs what is not.
 
 ---
 
@@ -89,36 +167,49 @@ Full auth mode: run same layout **without** `--no-auth`. Signature verification 
 
 ```
 Assignment_two/
-  transport.py          instructor TCP helper (unchanged)
-  alice_test.py         connectivity test
-  bob_test.py           connectivity test
-  generate_keys.py      Ed25519 identity keys
-  run_tests.py          local TR checks
-  config.py             protocol constants
-  crypto/               shared handshake + AEAD code
-  alice/alice.py        Alice program
-  bob/bob.py            Bob program
-  mallory/mallory.py    MITM proxy for TR-2
-  keys/                 identity keys (private keys stay local)
+├── README.md                 this file
+├── SETUP_GUIDE.md            short clone-to-run checklist
+├── requirements.txt
+├── transport.py              instructor TCP helper (do not change for crypto)
+├── alice_test.py             plain Hello connectivity
+├── bob_test.py
+├── generate_keys.py
+├── run_tests.py              one-PC checks
+├── config.py                 protocol IDs, roll numbers, port
+├── crypto/                   shared handshake + AEAD
+├── alice/alice.py
+├── bob/bob.py
+├── mallory/mallory.py
+└── keys/                     generated locally (private keys gitignored)
 ```
 
 ---
 
-## Two-machine checklist (with teammate)
+## Config notes
 
-1. Both pull same repo
-2. Run `python generate_keys.py` once; copy trusted public keys to both machines
-3. Bob runs `bob/bob.py`
-4. Alice runs `alice/alice.py <BOB_IP>`
-5. Capture logs for report
-6. Repeat TR-2 / TR-3 / TR-4 demos
-7. Optional Wireshark bonus on a successful session
+In `config.py`:
+
+- `ALICE_ID` / `BOB_ID` — exactly 8 ASCII bytes (roll numbers)
+- `PORT` — default `5000`
+
+Change IDs only if your team’s official rolls differ, and keep both machines on the same values.
 
 ---
 
-## Notes
+## Common problems
 
-- Do not use TLS or implement primitives by hand.
-- X25519 and Ed25519 are separate key pairs.
-- Receiver accepts only the next expected counter (replay rejection).
-- Raw X25519 shared secret is never used directly as AES key.
+| Problem | What to try |
+|---------|-------------|
+| Connection refused | Bob must start first; check IP and port; check firewall |
+| Hello works, crypto fails | Keys mismatch — copy the same `keys/` tree to both PCs |
+| Module not found | Activate `venv` and `pip install -r requirements.txt` |
+| Wrong Python | Use the venv Python (`python --version` after activate) |
+
+---
+
+## Rules from the assignment
+
+- Use standard libraries; do not implement X25519 / Ed25519 / HKDF / AES-GCM yourself
+- Do not solve this with TLS
+- No PKI / certificates required; long-term public keys are assumed authentic for this task
+- Marks are for crypto correctness and demos, not UI
